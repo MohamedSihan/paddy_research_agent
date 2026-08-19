@@ -1,0 +1,48 @@
+[
+  {
+    "id": "Q1",
+    "query": "Which dataset is specifically relevant to paddy disease detection?",
+    "relevant_ids": [
+      "SRC-01",
+      "SRC-02"
+    ]
+  },
+  {
+    "id": "Q2",
+    "query": "What lightweight CNN architectures are suitable for mobile or edge vision?",
+    "relevant_ids": [
+      "SRC-05",
+      "SRC-06",
+      "SRC-07"
+    ]
+  },
+  {
+    "id": "Q3",
+    "query": "How do hybrid CNN and Vision Transformer models combine local and global features?",
+    "relevant_ids": [
+      "SRC-08",
+      "SRC-09",
+      "SRC-10"
+    ]
+  },
+  {
+    "id": "Q4",
+    "query": "Which metrics should be used to evaluate edge inference efficiency?",
+    "relevant_ids": [
+      "SRC-05",
+      "SRC-06",
+      "SRC-11",
+      "SRC-12"
+    ]
+  },
+  {
+    "id": "Q5",
+    "query": "Why can field images cause robustness and domain-shift problems for plant disease models?",
+    "relevant_ids": [
+      "SRC-03",
+      "SRC-04",
+      "SRC-13",
+      "SRC-14"
+    ]
+  }
+]
