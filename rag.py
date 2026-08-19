@@ -5,7 +5,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 class EvidenceRetriever:
-    def __init__(self, corpus_dir="corpus"):
+    def __init__(self, corpus_dir=None):
+        if corpus_dir is None:
+            corpus_dir = Path(__file__).parent / "corpus"
         self.corpus_dir = Path(corpus_dir)
         self.docs = self._load()
         self.vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1,2), sublinear_tf=True)

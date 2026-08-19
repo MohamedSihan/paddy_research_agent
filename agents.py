@@ -15,24 +15,51 @@ class LLMClient:
         self.openrouter_key = os.getenv("OPENROUTER_API_KEY")
         self.groq_key = os.getenv("GROQ_API_KEY")
         self.or_model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
-        self.groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        self.groq_model = os.getenv("GROQ_MODEL", "groq/compound")
 
     def chat(self, provider, system, user):
         if provider == "openrouter":
             key, base, model = self.openrouter_key, os.getenv("OPENROUTER_BASE_URL","https://openrouter.ai/api/v1"), self.or_model
         else:
             key, base, model = self.groq_key, os.getenv("GROQ_BASE_URL","https://api.groq.com/openai/v1"), self.groq_model
-        if not key:
-            return None
-        r = requests.post(
-            f"{base}/chat/completions",
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-            json={"model": model, "messages":[{"role":"system","content":system},{"role":"user","content":user}],
-                  "temperature":0.2},
-            timeout=90
-        )
-        r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"]
+        
+        if key:
+            try:
+                r = requests.post(
+                    f"{base}/chat/completions",
+                    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                    json={"model": model, "messages":[{"role":"system","content":system},{"role":"user","content":user}],
+                          "temperature":0.2},
+                    timeout=90
+                )
+                r.raise_for_status()
+                return r.json()["choices"][0]["message"]["content"]
+            except Exception as err:
+                print(f"[LLMClient] Request failed for {provider} ({model}): {err}")
+
+        # Fallback provider if primary provider failed or has no key
+        alt_provider = "openrouter" if provider != "openrouter" else "groq"
+        if alt_provider == "openrouter":
+            alt_key, alt_base, alt_model = self.openrouter_key, os.getenv("OPENROUTER_BASE_URL","https://openrouter.ai/api/v1"), self.or_model
+        else:
+            alt_key, alt_base, alt_model = self.groq_key, os.getenv("GROQ_BASE_URL","https://api.groq.com/openai/v1"), self.groq_model
+
+        if alt_key:
+            try:
+                print(f"[LLMClient] Falling back to {alt_provider} ({alt_model})...")
+                r = requests.post(
+                    f"{alt_base}/chat/completions",
+                    headers={"Authorization": f"Bearer {alt_key}", "Content-Type": "application/json"},
+                    json={"model": alt_model, "messages":[{"role":"system","content":system},{"role":"user","content":user}],
+                          "temperature":0.2},
+                    timeout=90
+                )
+                r.raise_for_status()
+                return r.json()["choices"][0]["message"]["content"]
+            except Exception as err:
+                print(f"[LLMClient] Fallback request failed for {alt_provider} ({alt_model}): {err}")
+
+        return None
 
 class ResearchPlanner:
     name = "ResearchPlanner"
@@ -41,7 +68,7 @@ class ResearchPlanner:
 lightweight CNNs, hybrid CNN-Vision Transformers, robustness, and edge deployment.
 Return JSON with: research_goal, subquestions (3-5), retrieval_queries (3-5), required_metrics."""
         prompt = f"Research question: {question}"
-        raw = llm.chat("openrouter", system, prompt) if llm else None
+        raw = llm.chat("groq", system, prompt) if llm else None
         if raw:
             try:
                 data = json.loads(re.search(r"\{.*\}", raw, re.S).group(0))
